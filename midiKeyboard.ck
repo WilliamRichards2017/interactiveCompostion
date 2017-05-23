@@ -12,10 +12,10 @@ SndBuf guitar1 => dac;
 SndBuf guitar2 => dac;
 SndBuf guitar3 => dac;
 
-SndBuf sines => dac;
-SndBuf harmony => dac;
-SndBuf piano => dac;
-SndBuf metronome => dac;
+SndBuf sines => p => dac;
+SndBuf harmony => p =>  dac;
+SndBuf piano => p => dac;
+SndBuf metronome => p => dac;
 
 
 
@@ -63,7 +63,7 @@ MidiIn min;
 // the message for retrieving data
 MidiMsg msg;
 
-Rhodey synth;    //an array of synths for up to 10 tones... 
+PercFlut synth;    //an array of synths for up to 10 tones... 
 int id[100];          //an array to hold the note numbers so that we can match them up with the off signal
 int  counter;        //this is to cycle through the arrays looking for a position where a key isn't pressed
 
@@ -76,10 +76,31 @@ while( true ){
     //this processes the keypresses
     while( min.recv( msg ) ){
         
+        <<<msg.data1, msg.data2, msg.data3>>>;
         
         if (msg.data1 == 224) {
-            <<< msg.data2 >>>;
-            
+            msg.data3/127.0 => p.pan;           
+        }
+        
+        if (msg.data1 == 176) {
+            if(msg.data2 == 1) {
+                msg.data3/127.0 => p.gain;
+                }
+                
+                //Top nob 1
+                if(msg.data2 == 20) {
+                    msg.data3/127.0 => sines.gain;
+                }
+                
+                //Top nob 2
+                if(msg.data2 == 21) {
+                    msg.data3/127.0 => harmony.gain;
+                }
+                
+                if(msg.data2 == 22) {
+                    msg.data3/127.0 => piano.gain;
+                }
+
         }
         
         //touch pad press down
@@ -127,6 +148,7 @@ while( true ){
             ON(id[counter],
             msg.data3);  }// ON!
             
+            <<< msg.data1 >>>;
             if( msg.data1 == 128){//note off?
                 0=>counter;
                 
@@ -145,6 +167,7 @@ while( true ){
         }
         
         public void OFF(){
+            synth =< dac;
             0=>synth.noteOn;  //noteOff doesn't appear to do anything
             //Put some fancy envelopes here
         }
