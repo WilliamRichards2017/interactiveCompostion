@@ -20,13 +20,8 @@ SndBuf metronome => p => dac;
 
 
 // Load in sound files
-me.dir() + "audio/wavDir/dj_scratch.wav" => scratch.read;
-me.dir() + "audio/wgf.aiff" => wgf.read;
-me.dir() + "audio/high.wav" => high.read;
-me.dir() + "audio/high2.aiff" => high2.read;
+
 me.dir() + "beat.wav" => metronome.read;
-
-
 me.dir() + "sine.wav" => sines.read;
 me.dir() + "harmony.wav" => harmony.read;
 me.dir() + "piano.wav" => piano.read;
@@ -34,26 +29,9 @@ me.dir() + "piano.wav" => piano.read;
 piano.samples() => piano.pos;
 sines.samples() => sines.pos;
 harmony.samples() => harmony.pos;
-scratch.samples() => scratch.pos;
-wgf.samples() => wgf.pos;
-high.samples() => high.pos;
-high2.samples() => high2.pos;
 metronome.samples() => metronome.pos;
 
-
-fun void metro() {
-    metronome => dac;
-    0.2 => metronome.gain;
-
-    while(true) {
-   
-        0 => metronome.pos;
-        30::second => now;
-        }
-        
-    }
-
-//this is the device number for your midi controller
+//Midi divice number
 0 => int device;
 
 
@@ -63,26 +41,30 @@ MidiIn min;
 // the message for retrieving data
 MidiMsg msg;
 
-PercFlut synth;    //an array of synths for up to 10 tones... 
-int id[100];          //an array to hold the note numbers so that we can match them up with the off signal
-int  counter;        //this is to cycle through the arrays looking for a position where a key isn't pressed
+PercFlut synth;    //Sound that will control the midi keyboard 
+int id[100];          // Array to store notes currently being played
+int  counter;        // Counter to see how many notes we are currently playing
 
-min.open( device );  // open your midi keyboard...
+min.open( device );  // opens midi device
 
 while( true ){
-    // wait on your midi event
+    // Listens for midi event
     min => now;
     
-    //this processes the keypresses
+    //Process midi data 
     while( min.recv( msg ) ){
         
-        <<<msg.data1, msg.data2, msg.data3>>>;
+        //Debug statements, uncomment ot print out device input data
+        //<<<msg.data1, msg.data2, msg.data3>>>;
         
+        //left wheel
         if (msg.data1 == 224) {
             msg.data3/127.0 => p.pan;           
         }
         
+        //right wheel and nobs
         if (msg.data1 == 176) {
+            //right wheel
             if(msg.data2 == 1) {
                 msg.data3/127.0 => p.gain;
                 }
@@ -107,63 +89,65 @@ while( true ){
 
         }
         
-        //touch pad press down
+       //Touch pad area
        else if( msg.data1 == 153) {
-            //<<< msg.data2 >>>;
-
+           //pad 1
             if(msg.data2 == 49) {
                 0 => sines.pos;
             }
-            
+            //pad 2
             else if(msg.data2 == 41) {
                 0 => harmony.pos;
             } 
+            //pad 3
             else if(msg.data2 == 42) {
                 0 => piano.pos;
             } 
             
+            //pad 4
             else if(msg.data2 == 46) {
                 spork ~ metro();
             } 
-            else if(msg.data2 == 42) {
-                0 => high2.pos;
-            } 
+
+             //pad 8
             else if(msg.data2 == 39) {
                 metronome =< dac;
             } 
-
+            
         }
        
-       
-       else if( msg.data1 == 145 || msg.data1 == 144){ //note on?
-            0=> counter;         //initialize the counter
+       //Check if midi key is pressed, 
+       //idk why key press is inconsitently 145 or 144
+       else if( msg.data1 == 145 || msg.data1 == 144)
+       {  
+           0=> counter;          
             
-            while(id[counter]!=0) //this looks for an empty position in the array
+            //Looks for empty space to store midi key note
+            while(id[counter]!=0) 
                 counter++;
             
-            msg.data2=>id[counter]; //puts the midi key number into the id array
-            
+            //store midi note in array
+            msg.data2=>id[counter]; 
+            //turn note on on key press
             ON(id[counter],
-            msg.data3);  }// ON!
+            msg.data3);  }
             
-            <<< msg.data1 >>>;
+            //turn note off on key release
             if( msg.data1 == 128){//note off?
-                0=>counter;
-                
-                
-                OFF();        //OFF!!!!!
-                0=>id[counter];   }  //changes the id of the note just turned off to zero for re-use
-                
+                0=>counter;  
+                OFF();       
+                0=>id[counter];   }                  
             }	
         }
     
-        
+        //helper function to turn note on
         public void ON(int note, int velocity){
             synth=>dac;                       
-            Std.mtof( note ) => synth.freq;    //changes the midi note to a frequency
-            velocity / 128.0 => synth.noteOn;	//put some fancy velocity algorithms here
+            Std.mtof( note ) => synth.freq;    
+            velocity / 128.0 => synth.noteOn;	
         }
         
+        //helper function to turn not off
         public void OFF(){
             synth =< dac;
             0=>synth.noteOn;  //noteOff doesn't appear to do anything
