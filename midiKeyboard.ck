@@ -1,49 +1,38 @@
-SndBuf wgf => Pan2 p=> dac;
-SndBuf high => dac;
-SndBuf high2 => dac;
-SndBuf scratch => dac;
-SndBuf hit2 => p => dac;
-SndBuf gucci => p => dac;
-SndBuf dustysines=> dac;
-SndBuf belt => dac;
-SndBuf yeah => p => dac;
-SndBuf brooklyn => dac;
-SndBuf guitar1 => dac;
-SndBuf guitar2 => dac;
-SndBuf guitar3 => dac;
+/* Will Richards, collabed in logic with Charlie Martens to make .wav files
+ *  MUSC 208
+ *  Interactive composition
+ */
 
-SndBuf sines => p => dac;
+
+//Midi event
+MidiIn min;
+//Midi Message
+MidiMsg msg;
+
+//Chuck sound buffers to dac and pan
+SndBuf sines => Pan2 p => dac;
 SndBuf harmony => p =>  dac;
 SndBuf piano => p => dac;
 SndBuf metronome => p => dac;
 
-
+PercFlut synth;    //Sound that will control the midi keyboard 
+int id[100];          // Array to store notes currently being played
+int  counter;        // Counter to see how many notes we are currently playing
 
 // Load in sound files
-
 me.dir() + "beat.wav" => metronome.read;
 me.dir() + "sine.wav" => sines.read;
 me.dir() + "harmony.wav" => harmony.read;
 me.dir() + "piano.wav" => piano.read;
 
+//Set head of SndBuf to end of sample
 piano.samples() => piano.pos;
 sines.samples() => sines.pos;
 harmony.samples() => harmony.pos;
 metronome.samples() => metronome.pos;
 
-//Midi divice number
+//Midi divice port
 0 => int device;
-
-
-
-// a MidiIn event!	
-MidiIn min;
-// the message for retrieving data
-MidiMsg msg;
-
-PercFlut synth;    //Sound that will control the midi keyboard 
-int id[100];          // Array to store notes currently being played
-int  counter;        // Counter to see how many notes we are currently playing
 
 min.open( device );  // opens midi device
 
@@ -106,12 +95,12 @@ while( true ){
             
             //pad 4
             else if(msg.data2 == 46) {
-                spork ~ metro();
+                0 => metronome.pos;
             } 
 
              //pad 8
             else if(msg.data2 == 39) {
-                metronome =< dac;
+             
             } 
             
         }
@@ -133,7 +122,7 @@ while( true ){
             msg.data3);  }
             
             //turn note off on key release
-            if( msg.data1 == 128){//note off?
+            if( msg.data1 == 128){
                 0=>counter;  
                 OFF();       
                 0=>id[counter];   }                  
@@ -150,6 +139,6 @@ while( true ){
         //helper function to turn not off
         public void OFF(){
             synth =< dac;
-            0=>synth.noteOn;  //noteOff doesn't appear to do anything
-            //Put some fancy envelopes here
+            0=>synth.noteOn;  
         }
+        
