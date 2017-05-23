@@ -24,10 +24,10 @@ me.dir() + "audio/wavDir/dj_scratch.wav" => scratch.read;
 me.dir() + "audio/wgf.aiff" => wgf.read;
 me.dir() + "audio/high.wav" => high.read;
 me.dir() + "audio/high2.aiff" => high2.read;
-me.dir() + "bass.wav" => metronome.read;
+me.dir() + "beat.wav" => metronome.read;
 
 
-me.dir() + "sines.wav" => sines.read;
+me.dir() + "sine.wav" => sines.read;
 me.dir() + "harmony.wav" => harmony.read;
 me.dir() + "piano.wav" => piano.read;
 
@@ -48,7 +48,7 @@ fun void metro() {
     while(true) {
    
         0 => metronome.pos;
-        .5::second => now;
+        30::second => now;
         }
         
     }
@@ -100,6 +100,10 @@ while( true ){
                 if(msg.data2 == 22) {
                     msg.data3/127.0 => piano.gain;
                 }
+                if(msg.data2 == 23) {
+                    msg.data3/127.0 => metronome.gain;
+                }
+
 
         }
         
@@ -127,17 +131,11 @@ while( true ){
             else if(msg.data2 == 39) {
                 metronome =< dac;
             } 
-            else if(msg.data2 == 41) {
-                0 => guitar2.pos;
-            } 
-            else if(msg.data2 == 36) {
-                0 => guitar3.pos;
-            } 
+
         }
        
        
        else if( msg.data1 == 145 || msg.data1 == 144){ //note on?
-           <<< "swag" >>>; 
             0=> counter;         //initialize the counter
             
             while(id[counter]!=0) //this looks for an empty position in the array
