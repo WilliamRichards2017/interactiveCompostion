@@ -15,15 +15,19 @@ SndBuf harmony => p =>  dac;
 SndBuf piano => p => dac;
 SndBuf metronome => p => dac;
 
-PercFlut synth;    //Sound that will control the midi keyboard 
+0 => harmony.gain => piano.gain => metronome.gain;
+
+Flute synth;  
+1 => synth.gain;
+  //Sound that will control the midi keyboard 
 int id[100];          // Array to store notes currently being played
 int  counter;        // Counter to see how many notes we are currently playing
 
 // Load in sound files
-me.dir() + "beat.wav" => metronome.read;
-me.dir() + "sine.wav" => sines.read;
-me.dir() + "harmony.wav" => harmony.read;
-me.dir() + "piano.wav" => piano.read;
+me.dir() + "audio/drum.wav" => metronome.read;
+me.dir() + "audio/sine.wav" => sines.read;
+me.dir() + "audio/harmony.wav" => harmony.read;
+me.dir() + "audio/piano.wav" => piano.read;
 
 //Set head of SndBuf to end of sample
 piano.samples() => piano.pos;
